@@ -16,11 +16,11 @@ export default function Login() {
   
   const [request, response, promptAsync] = useAuthRequest({
     responseType: ResponseType.Token,
-    clientId: "<CLIENT_ID>",
-    clientSecret: "<CLIENT_SECRET>",
+    clientId: "e8f0a249dd494957b24bf576939e6b00",
+    clientSecret: "033965432dfd4a63a950a30e1b986b30",
     scopes: ["user-read-currently-playing"],
     usePKCE: false,
-    redirectUri: "<REDIRECT_URI>", //exp://192.168.0.11:19000
+    redirectUri: "exp://192.168.0.11:19000",
   }, discovery);
 
   useEffect(() => {
