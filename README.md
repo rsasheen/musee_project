@@ -19,5 +19,5 @@
 
 
 References for the Spotify OAuth Authentication:
-1. OAuth logging for Spotify: https://reactnative.dev/docs/components-and-apis
+1. OAuth logging for Spotify: https://docs.expo.dev/guides/authentication/#spotify
 2. Existing project where Spotify OAuth is currently being used: https://github.com/adityakmr7/spotify-clone 
