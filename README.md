@@ -14,7 +14,7 @@
   - CLIENT_SECRET
   - REDIRECT_URI (this will be the same as your exp://xxx.xxx.x.xx:xxxxx URL from the terminal when your project runs - it can be found on the line where it tells you 'Metro waiting on ...')
 
-7. Run - "nom start" and deploy the application either on an emulator or on the Expo Go App on your phone
+7. Run - "npm start" and deploy the application either on an emulator or on the Expo Go App on your phone
 
 
 
