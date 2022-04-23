@@ -7,7 +7,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { createUser, setSpotifyToken, userIDExists } from "./../FirebaseMethods";
 import { setUpUserID, userId } from "../../config/keys";
-import userID from "../../config/userID.json";
+import uID from "../../config/userID.json";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -22,20 +22,18 @@ export default function Login() {
   
   const [request, response, promptAsync] = useAuthRequest({
     responseType: ResponseType.Token,
-    clientId: "e8f0a249dd494957b24bf576939e6b00",
-    clientSecret: "033965432dfd4a63a950a30e1b986b30",
+    clientId: "<>",
+    clientSecret: "<>",
     scopes: ["user-read-currently-playing"],
     usePKCE: false,
-    redirectUri: "exp://192.168.0.10:19000"
+    redirectUri: "<>"
   }, discovery);
 
   useEffect(() => {
     if(response?.type === "success"){
       authenticatedUser = true;
       const {access_token} = response.params;
-      // console.log(userID);
-      // if(userId == null){
-      //setUpUserID("12345")
+      
       if(userId != null){
         var min = Math.ceil(0);
 	      var max = Math.floor(100000000);
@@ -45,18 +43,8 @@ export default function Login() {
         setUpUserID(JSON.stringify(id))
       }
       else{
-        //check if user exists
-        console.log("Calling console log to check if userId exists");
-        
-        async() => {
-          console.log("Inside Login.tsx else block: ") 
-          try{
-            console.log( await userIDExists("15746922"));
-          }catch(e){
-            console.log("Error: ", e);
-          }
-        }
-        console.log("After the async call for userID")
+       checkExistsUser() 
+       checkIfUserJsonSet()
       }
       // callApi(access_token);
     }
@@ -64,6 +52,25 @@ export default function Login() {
       console.log('Failed to setup with login. Trying Again');
     }
   }, [response]);
+
+
+  async function checkExistsUser(){
+    // console.log("Inside Login.tsx else block: ") 
+    try{
+      // console.log(await userIDExists("15746922")); // User exists
+      console.log(await userIDExists("123456"));  // User does not exists
+    }catch(e){
+      console.log("Error: ", e);
+    }
+    // console.log("After the async call for userID")
+  }
+
+  async function checkIfUserJsonSet(){
+    if(Object.keys(uID).length === 0)
+      console.log("User json is empty");
+    else
+      console.log("User json is has: " + Object.keys(uID));
+  }
 
 
 
