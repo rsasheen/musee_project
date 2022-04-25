@@ -1,8 +1,10 @@
 import * as firebase from "firebase/app";
-import { collection, getFirestore, setDoc, getDoc, doc , updateDoc, DocumentSnapshot } from "@firebase/firestore";
+import { collection, getFirestore, setDoc, getDoc, doc , updateDoc, DocumentSnapshot, collectionGroup, Query, limit, getDocs, query } from "@firebase/firestore";
 import "firebase/firestore";
 import {Alert} from "react-native";
 import { firebaseConfig, userId } from "../config/keys";
+import { CollectionReference, getDocsFromCache, QueryConstraint, where } from "firebase/firestore";
+import { useRef } from "react";
 
 const app = firebase.initializeApp(firebaseConfig);
 
@@ -62,9 +64,59 @@ export async function userIDExists(userID: any){
     const userIdentity = (await getDoc(doc(db, "user",userID))).exists();
 
     if (userIdentity) {
-      return "UID EXISTS!!! \n" + await JSON.stringify(userIdentity)
+      console.log("UID EXISTS!!! \n" + await JSON.stringify(userIdentity))
+      return true
     } else {
-      return "UID DOES NOT EXIST!!! \n" + await JSON.stringify(userIdentity)
+      console.log("UID DOES NOT EXIST!!! \n" + await JSON.stringify(userIdentity))
+      return false
+    }
+}
+
+export async function getListOfUsersSongs(longitude: any, latitude: any, altitude: any, speed: any) {
+  var proxL = 5,
+  proxA = 3,
+  proxS = 3,
+  currUserLat = latitude,
+  currUserLong = longitude,
+  currUserAlt = altitude,
+  currUserSpeed = speed 
+  console.log("Inside getListOfUsersSongs")
+  try {
+    const db = getFirestore();
+    // console.log("Queried firebase")
+    
+    
+    const userRef = collection(db, "user")
+    // console.log("Querying")
+    console.log(JSON.stringify(userRef))
+    const q = query(userRef, where("speed", '==', "9"),limit(4))
+    // const q = query(userRef, where('location.lat ', '>=', currUserLat - proxL),
+    //                          where('location.lat', '<=', currUserLat + proxL), limit(4))
+                            //  , 
+                            //  where('location.long ', '>=', currUserLong - proxL),
+                            //  where('location.long', '<=', currUserLong + proxL),
+                            //  where('location.alt ', '>=', currUserAlt - proxA),
+                            //  where('location.long', '<=', currUserAlt + proxA),
+                            //  where('speed ', '>=', currUserSpeed - proxS),
+                            //  where('speed', '<=', currUserSpeed + proxS),
+                            //  limit(4))
+    // console.log("Queried")
+    const querySnapshot = await getDocs(q);
+    // console.log("Query Snapshot")
+    
+    if(querySnapshot.empty)
+      console.log("querySnapshot is null")
+    else { 
+      console.log("querySnapshot is not null")
+    // console.log(JSON.stringify(querySnapshot))
+    // console.log(JSON.stringify(querySnapshot.metadata))
+    // console.log(JSON.stringify(querySnapshot.docs))
+      querySnapshot.forEach((doc) => {
+         console.log("Here " , doc.id, " " , JSON.stringify(doc.data()))
+    })}
+    console.log("Done")
+  }catch (err) {
+      Alert.alert("There is something wrong in getListOfUsersSongs!!!!");
     }
 }
 
@@ -124,3 +176,5 @@ export async function getSpotifyToken(userID: any){
         Alert.alert("There is something wrong!!!!");
       }
 }
+
+
