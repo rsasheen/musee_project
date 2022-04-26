@@ -13,12 +13,22 @@ import jsonConfig from "../functions/service-account.json";
 import { color } from 'react-native-reanimated';
 import { backgroundColor } from '@shopify/restyle';
 
-import { currentPosition, currentSongUpdate, getSpotifyToken } from './FirebaseMethods';
+import { currentPosition, currentSongUpdate, getListOfUsersSongs, getSpotifyToken } from './FirebaseMethods';
+
+// import {listOfSongs} from "../config/global";
 
 
 const {width: wWidth, height: wHeight} = Dimensions.get("window");
 
-const GeoLocation = () =>  {
+var latitude: any, longitude: any, altitude: any, speed: any;
+
+var songList: any;
+
+export async function getListOfSongs(songs:any){
+  songList = songs
+}
+
+const GeoLocation = (listOfSongs: any) =>  {
 
 const [isEnabled, setVisuals] = useState(false); 
 const [visible, setVisible] = useState(true);
@@ -43,7 +53,7 @@ useEffect(() => {
         if(isEnabled){
         (async () => {
             console.log("Inside async call")
-            console.log(userId);
+            //console.log(userId);
             let { status } = await Location.requestForegroundPermissionsAsync();
             if (status !== 'granted') {
                   console.log('Permission to access location was denied');
@@ -55,22 +65,55 @@ useEffect(() => {
               location.coords.latitude, 
               location.coords.altitude, 
               location.coords.speed);
+            
+            // longitude = location.coords.longitude, 
+            // latitude = location.coords.latitude, 
+            // altitude = location.coords.altitude, 
+            // speed = location.coords.speed
 
             getCurrentSong(await getSpotifyToken("dfxghh"));
+            
 
           })();}
       }, 10000);
       return () => clearInterval(interval);
   }, [isEnabled]);
 
+  async function getSong(songs:any ){
+    console.log("printing songs:", await songs);
+  }
+
   useEffect(() => {
+    console.log("Second useEffect");
     const interval = setInterval(() => {
         if(isEnabled){
-            console.log("Second useEffect");
-        }
-      }, 60000);
+          // console.log("Inside ifEnabled code block");
+          
+          (async () => {
+            // console.log("Inside async block");
+            // await getListOfUsersSongs(longitude, latitude, altitude, speed)
+            let { status } = await Location.requestForegroundPermissionsAsync();
+            if (status !== 'granted') {
+                  console.log('Permission to access location was denied');
+                  return;
+                }
+            let location = await Location.getCurrentPositionAsync({});
+            // console.log("Speed in second async call for location: ", speed)
+            longitude = location.coords.longitude, 
+            latitude = location.coords.latitude, 
+            altitude = location.coords.altitude, 
+            speed = location.coords.speed
+
+            console.log("trial: ", await getListOfUsersSongs(longitude, latitude, altitude, speed))
+
+            getSong(await getListOfUsersSongs(longitude, latitude, altitude, speed));
+            // console.log(await listOfSongs + " songlist!");
+          })();}
+      }, 10000);
       return () => clearInterval(interval);
   }, [isEnabled]);
+
+  
 
   async function getCurrentSong(access_token: any) {
     try{
@@ -82,17 +125,24 @@ useEffect(() => {
           'Authorization': `Bearer ${access_token}`
         }
       }).then((response) => {
-        console.log(response.json().then(
-            (data) => { console.log(
-              "\n\n",
-              "\nSong Name: ", data.item.name, 
-              "\nAlbum Name: ", data.item.album.name, 
-              "\nMain Artist Name: ", data.item.artists[0].name, 
-              "\nTrack URI: ", data.item.uri, 
-              "\n\n") 
+        console.log(access_token)
+        if(JSON.stringify(response.status) == '200'){
+          console.log(response.json().then(
+            (data) => { 
+              // console.log(
+              // "\n\n",
+              // "\nSong Name: ", data.item.name, 
+              // "\nAlbum Name: ", data.item.album.name, 
+              // "\nMain Artist Name: ", data.item.artists[0].name, 
+              // "\nTrack URI: ", data.item.uri, 
+              // "\n\n") 
               currentSongUpdate("dfxghh", data.item.uri, data.item.album.name, data.item.artists[0].name, data.item.name);
             }
-        ));
+          ));
+        }
+        else{
+          console.log("There is no song playing");
+        }
       })
     ;
     }
