@@ -82,18 +82,19 @@ export async function getListOfUsersSongs(longitude: any, latitude: any, altitud
   currUserLong = longitude,
   currUserAlt = altitude,
   currUserSpeed = speed 
+  var listOfSongs: any[][] = [];
   console.log("Inside getListOfUsersSongs")
   try {
     const db = getFirestore();
 
     
     const userRef = collection(db, "user")
-    var listOfSongs: any[][] = [];
+    //var listOfSongs: any[][] = [];
     const q = query(userRef, limit(4))
-    var count = 0;
-    const usersData = onSnapshot(q, (querySnapshot) => {
-      querySnapshot.forEach((doc) => {
-        var localList = []
+
+    const querySnapshot = await getDocs(q);
+    querySnapshot.forEach((doc) => {
+      var localList = []
         if(doc.data().location.alt >= (currUserAlt - proxA) && doc.data().location.alt <= (currUserAlt+ proxA)){
               if (doc.data().location.lat >= (currUserLat - proxL) && doc.data().location.lat <= (currUserLat+ proxL) ){
                 if (doc.data().location.long >= (currUserLong - proxL) && doc.data().location.long <= (currUserLong+ proxL) ){
@@ -109,20 +110,46 @@ export async function getListOfUsersSongs(longitude: any, latitude: any, altitud
                   }
                 }
               }
-            }
-          });
-      // var something = usersData();
-      // console.log("printing something:", something);
+        }
+    })
+
+    // var count = 0;
+    // const usersData = await onSnapshot(q, (querySnapshot) => {
+    //   querySnapshot.forEach((doc) => {
+    //     var localList = []
+    //     if(doc.data().location.alt >= (currUserAlt - proxA) && doc.data().location.alt <= (currUserAlt+ proxA)){
+    //           if (doc.data().location.lat >= (currUserLat - proxL) && doc.data().location.lat <= (currUserLat+ proxL) ){
+    //             if (doc.data().location.long >= (currUserLong - proxL) && doc.data().location.long <= (currUserLong+ proxL) ){
+    //               if ( doc.data().speed >= (currUserSpeed - proxS) && doc.data().speed <= (currUserSpeed + proxS)){
+    //                   // console.log(doc.data().songInfo.URI)
+    //                   localList.push(doc.data().songInfo.songTitle)
+    //                   localList.push(doc.data().songInfo.songArtist)
+    //                   localList.push(doc.data().songInfo.songAlbum)
+    //                   localList.push(doc.data().songInfo.URI)
+    //                   listOfSongs.push(localList)
+
+                    
+    //               }
+    //             }
+    //           }
+    //         }
+    //       });
+    //   // var something = usersData();
+    //   // console.log("printing something:", something);
       
-      console.log("Current users: ", listOfSongs.join(","));
-      return listOfSongs
+    //   // console.log("Current users: ", listOfSongs.join(","));
+    //   return (listOfSongs.join(","));
     
 
-    });
+    // });
+    //var verifytests = await usersData();
+    //console.log("PRINT USERDATA:", await verifytests);
     
   }catch (err) {
       Alert.alert("There is something wrong in getListOfUsersSongs!!!!");
     }
+    return (listOfSongs.join(","));
+    // console.log(listOfSongs.join(","));
 }
 
 export async function currentPosition(userID: any, longitude: any, latitude: any, altitude: any, speed: any) {
