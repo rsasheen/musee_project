@@ -3,8 +3,10 @@ import { collection, getFirestore, setDoc, getDoc, doc , updateDoc, DocumentSnap
 import "firebase/firestore";
 import {Alert} from "react-native";
 import { firebaseConfig, userId } from "../config/keys";
-import { CollectionReference, getDocsFromCache, QueryConstraint, where } from "firebase/firestore";
+import { CollectionReference, getDocsFromCache, onSnapshot, QueryConstraint, where } from "firebase/firestore";
 import { useRef } from "react";
+
+// import {listOfSongs} from "../config/global";
 
 const app = firebase.initializeApp(firebaseConfig);
 
@@ -83,38 +85,41 @@ export async function getListOfUsersSongs(longitude: any, latitude: any, altitud
   console.log("Inside getListOfUsersSongs")
   try {
     const db = getFirestore();
-    // console.log("Queried firebase")
-    
+
     
     const userRef = collection(db, "user")
-    // console.log("Querying")
-    console.log(JSON.stringify(userRef))
-    const q = query(userRef, where("speed", '==', "9"),limit(4))
-    // const q = query(userRef, where('location.lat ', '>=', currUserLat - proxL),
-    //                          where('location.lat', '<=', currUserLat + proxL), limit(4))
-                            //  , 
-                            //  where('location.long ', '>=', currUserLong - proxL),
-                            //  where('location.long', '<=', currUserLong + proxL),
-                            //  where('location.alt ', '>=', currUserAlt - proxA),
-                            //  where('location.long', '<=', currUserAlt + proxA),
-                            //  where('speed ', '>=', currUserSpeed - proxS),
-                            //  where('speed', '<=', currUserSpeed + proxS),
-                            //  limit(4))
-    // console.log("Queried")
-    const querySnapshot = await getDocs(q);
-    // console.log("Query Snapshot")
-    
-    if(querySnapshot.empty)
-      console.log("querySnapshot is null")
-    else { 
-      console.log("querySnapshot is not null")
-    // console.log(JSON.stringify(querySnapshot))
-    // console.log(JSON.stringify(querySnapshot.metadata))
-    // console.log(JSON.stringify(querySnapshot.docs))
+    var listOfSongs: any[][] = [];
+    const q = query(userRef, limit(4))
+    var count = 0;
+    const usersData = onSnapshot(q, (querySnapshot) => {
       querySnapshot.forEach((doc) => {
-         console.log("Here " , doc.id, " " , JSON.stringify(doc.data()))
-    })}
-    console.log("Done")
+        var localList = []
+        if(doc.data().location.alt >= (currUserAlt - proxA) && doc.data().location.alt <= (currUserAlt+ proxA)){
+              if (doc.data().location.lat >= (currUserLat - proxL) && doc.data().location.lat <= (currUserLat+ proxL) ){
+                if (doc.data().location.long >= (currUserLong - proxL) && doc.data().location.long <= (currUserLong+ proxL) ){
+                  if ( doc.data().speed >= (currUserSpeed - proxS) && doc.data().speed <= (currUserSpeed + proxS)){
+                      // console.log(doc.data().songInfo.URI)
+                      localList.push(doc.data().songInfo.songTitle)
+                      localList.push(doc.data().songInfo.songArtist)
+                      localList.push(doc.data().songInfo.songAlbum)
+                      localList.push(doc.data().songInfo.URI)
+                      listOfSongs.push(localList)
+
+                    
+                  }
+                }
+              }
+            }
+          });
+      // var something = usersData();
+      // console.log("printing something:", something);
+      
+      console.log("Current users: ", listOfSongs.join(","));
+      return listOfSongs
+    
+
+    });
+    
   }catch (err) {
       Alert.alert("There is something wrong in getListOfUsersSongs!!!!");
     }
