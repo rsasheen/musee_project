@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { Platform, Text, View, StyleSheet, Dimensions, Switch, SafeAreaView } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { Platform, Text, View, StyleSheet, Dimensions, Switch, SafeAreaView, FlatList } from 'react-native';
 import * as Location from 'expo-location';
 import { ScrollView, TouchableOpacity } from 'react-native-gesture-handler';
 import { ToggleButton } from 'react-native-paper';
 import GetLocation from 'react-native-get-location';
 import { Banner } from 'react-native-paper';
+import { List, Divider } from 'react-native-paper';
 
 import { initializeApp } from "firebase/app";
 import { firebaseConfig, userId } from "../config/keys";
@@ -14,6 +15,7 @@ import { color } from 'react-native-reanimated';
 import { backgroundColor } from '@shopify/restyle';
 
 import { currentPosition, currentSongUpdate, getListOfUsersSongs, getSpotifyToken } from './FirebaseMethods';
+import { EllipsizeProp } from 'react-native-paper/lib/typescript/types';
 
 // import {listOfSongs} from "../config/global";
 
@@ -24,14 +26,17 @@ var latitude: any, longitude: any, altitude: any, speed: any;
 
 var songList: any;
 
+
 export async function getListOfSongs(songs:any){
   songList = songs
 }
 
-const GeoLocation = (listOfSongs: any) =>  {
+const GeoLocation: React.FC = () =>  {
 
 const [isEnabled, setVisuals] = useState(false); 
 const [visible, setVisible] = useState(true);
+let listOfSongs = useRef({});
+
 
 const storeFireBaseConfigs = async() => {
   try{
@@ -53,67 +58,66 @@ useEffect(() => {
         if(isEnabled){
         (async () => {
             console.log("Inside async call")
-            //console.log(userId);
+            
             let { status } = await Location.requestForegroundPermissionsAsync();
             if (status !== 'granted') {
                   console.log('Permission to access location was denied');
                   return;
                 }
             let location = await Location.getCurrentPositionAsync({});
-            // console.log(location);
+            
             currentPosition("dfxghh", location.coords.longitude, 
               location.coords.latitude, 
               location.coords.altitude, 
               location.coords.speed);
-            
-            // longitude = location.coords.longitude, 
-            // latitude = location.coords.latitude, 
-            // altitude = location.coords.altitude, 
-            // speed = location.coords.speed
 
             getCurrentSong(await getSpotifyToken("dfxghh"));
-            
+            displaySong();
 
           })();}
       }, 10000);
       return () => clearInterval(interval);
   }, [isEnabled]);
 
-  async function getSong(songs:any ){
-    console.log("printing songs:", await songs);
+  function displaySong(){
+
+    console.log("Looping through listOfSongs")
+    let parsedListOfSongs = listOfSongs.current as unknown as Array<Array<String>>
+    if( parsedListOfSongs[0] != null){
+      return parsedListOfSongs;
+    }
+    else{
+      console.log("No songs nearby")
+      return [["NO SONGS NEARBY"]];
+    }
   }
 
   useEffect(() => {
     console.log("Second useEffect");
     const interval = setInterval(() => {
         if(isEnabled){
-          // console.log("Inside ifEnabled code block");
           
           (async () => {
-            // console.log("Inside async block");
-            // await getListOfUsersSongs(longitude, latitude, altitude, speed)
+            
             let { status } = await Location.requestForegroundPermissionsAsync();
             if (status !== 'granted') {
                   console.log('Permission to access location was denied');
                   return;
                 }
             let location = await Location.getCurrentPositionAsync({});
-            // console.log("Speed in second async call for location: ", speed)
+            
             longitude = location.coords.longitude, 
             latitude = location.coords.latitude, 
             altitude = location.coords.altitude, 
             speed = location.coords.speed
 
-            console.log("trial: ", await getListOfUsersSongs(longitude, latitude, altitude, speed))
+            listOfSongs.current = await getListOfUsersSongs(longitude, latitude, altitude, speed)
 
-            getSong(await getListOfUsersSongs(longitude, latitude, altitude, speed));
-            // console.log(await listOfSongs + " songlist!");
+            
           })();}
       }, 10000);
       return () => clearInterval(interval);
   }, [isEnabled]);
-
-  
 
   async function getCurrentSong(access_token: any) {
     try{
@@ -129,13 +133,6 @@ useEffect(() => {
         if(JSON.stringify(response.status) == '200'){
           console.log(response.json().then(
             (data) => { 
-              // console.log(
-              // "\n\n",
-              // "\nSong Name: ", data.item.name, 
-              // "\nAlbum Name: ", data.item.album.name, 
-              // "\nMain Artist Name: ", data.item.artists[0].name, 
-              // "\nTrack URI: ", data.item.uri, 
-              // "\n\n") 
               currentSongUpdate("dfxghh", data.item.uri, data.item.album.name, data.item.artists[0].name, data.item.name);
             }
           ));
@@ -152,12 +149,22 @@ useEffect(() => {
   }
 
   return (
+    
     <SafeAreaView style={{ flex: 1 }}>
       <View style={{flex: 1}}>
+        {displaySong().map(listitem => (
+            <List.Item
+              title={listitem[0]}
+              description={listitem[1]}
+              />
+          ))}
+
         <View style={{position: 'absolute', left: 0, right: 0, bottom: 0}}>
+        <Text>{(listOfSongs as unknown as Array<Array<String>>)!=undefined? (listOfSongs as unknown as Array<Array<String>>)[0]+"Hello" : "Empty"}</Text>
           <Banner style={{flex:1,justifyContent:'flex-end',alignItems:'center'}} visible={visible}
           actions={[]}>
              Musée broadcasts your music to everyone nearby.
+             
           </Banner>
           <View style={{flex:1,justifyContent:'flex-end',alignItems:'center', backgroundColor:'#ffffff'}}>
             <Text>{isEnabled ? 'Share' : 'Private'}</Text>
@@ -175,6 +182,7 @@ useEffect(() => {
   </SafeAreaView>
       
   );
+  
 }
 
 const styles = StyleSheet.create({
@@ -186,3 +194,4 @@ const styles = StyleSheet.create({
   });
 
   export default GeoLocation;
+
