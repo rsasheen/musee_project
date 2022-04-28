@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Platform, Text, View, StyleSheet, Dimensions, Switch, SafeAreaView, FlatList } from 'react-native';
+import { Platform, Text, View, StyleSheet, Dimensions, Switch, SafeAreaView, FlatList, Linking } from 'react-native';
 import * as Location from 'expo-location';
 import { ScrollView, TouchableOpacity } from 'react-native-gesture-handler';
-import { ToggleButton } from 'react-native-paper';
+import { Appbar, Button, ToggleButton } from 'react-native-paper';
 import GetLocation from 'react-native-get-location';
 import { Banner } from 'react-native-paper';
 import { List, Divider } from 'react-native-paper';
@@ -84,11 +84,12 @@ useEffect(() => {
     console.log("Looping through listOfSongs")
     let parsedListOfSongs = listOfSongs.current as unknown as Array<Array<String>>
     if( parsedListOfSongs[0] != null){
+      console.log(parsedListOfSongs)
       return parsedListOfSongs;
     }
     else{
       console.log("No songs nearby")
-      return [["NO SONGS NEARBY"]];
+      return [["NO SONGS NEARBY","","","::"]];
     }
   }
 
@@ -148,19 +149,44 @@ useEffect(() => {
     }
   }
 
+  function goToSpotifySong(songURI: String){
+    console.log()
+
+    // Linking.openURL('https://open.spotify.com/track/5CZ40GBx1sQ9agT82CLQCT')}>
+    // goToSpotifySong(listitem[3])}>
+  }
+type row = "row"
   return (
     
     <SafeAreaView style={{ flex: 1 }}>
+      <View>
+      <Appbar.Header style={{backgroundColor: '#1DB954'}}>
+        <Appbar.Content title='Songs Playing Near You' />
+        
+      </Appbar.Header>
+      </View>
       <View style={{flex: 1}}>
-        {displaySong().map(listitem => (
-            <List.Item
-              title={listitem[0]}
-              description={listitem[1]}
-              />
+          {/* setInterval(() =>  */}
+          {displaySong().map(listitem => (
+            <View>
+              {/* <Button onPress={() => {Linking.openURL('https://open.spotify.com/track/5CZ40GBx1sQ9agT82CLQCT')}}></Button> + listitem[3].split(":")[2]*/}
+              <TouchableOpacity onPress={() => Linking.openURL('https://open.spotify.com/track/'+listitem[3].split(":")[2])}>
+                <View style={{flexDirection: 'row' as row , backgroundColor:'#95de62', width:wWidth*0.1, height:wHeight*0.05, padding:5, alignItems: "center", justifyContent: "center"}}>
+                  {/* <Text>Go to Song</Text> */}
+                </View>
+              </TouchableOpacity>
+              <List.Item 
+                title={listitem[0]}
+                description={listitem[3].split(":")[2]}
+              /> 
+              <Divider />
+            </View>
+            
           ))}
+          {/* , 10000); */}
 
         <View style={{position: 'absolute', left: 0, right: 0, bottom: 0}}>
-        <Text>{(listOfSongs as unknown as Array<Array<String>>)!=undefined? (listOfSongs as unknown as Array<Array<String>>)[0]+"Hello" : "Empty"}</Text>
+        
           <Banner style={{flex:1,justifyContent:'flex-end',alignItems:'center'}} visible={visible}
           actions={[]}>
              Musée broadcasts your music to everyone nearby.
@@ -192,6 +218,7 @@ const styles = StyleSheet.create({
       justifyContent: 'flex-end',
     },
   });
+  
 
   export default GeoLocation;
 
