@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Platform, Text, View, StyleSheet, Dimensions, Switch, SafeAreaView, FlatList, Linking } from 'react-native';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Platform, Text, View, StyleSheet, Dimensions, Switch, SafeAreaView, FlatList, Linking, RefreshControl, ScrollView } from 'react-native';
 import * as Location from 'expo-location';
-import { ScrollView, TouchableOpacity } from 'react-native-gesture-handler';
+import { TouchableOpacity } from 'react-native-gesture-handler';
 import { Appbar, Button, ToggleButton } from 'react-native-paper';
 import GetLocation from 'react-native-get-location';
 import { Banner } from 'react-native-paper';
@@ -24,12 +24,12 @@ const {width: wWidth, height: wHeight} = Dimensions.get("window");
 
 var latitude: any, longitude: any, altitude: any, speed: any;
 
-var songList: any;
+// var songList: any;
 
-
-export async function getListOfSongs(songs:any){
-  songList = songs
+const wait = (timeout: number | undefined) => {
+  return new Promise(resolve => setTimeout(resolve, timeout));
 }
+
 
 const GeoLocation: React.FC = () =>  {
 
@@ -72,7 +72,7 @@ useEffect(() => {
               location.coords.speed);
 
             getCurrentSong(await getSpotifyToken("dfxghh"));
-            displaySong();
+            // displaySong();
 
           })();}
       }, 10000);
@@ -83,13 +83,18 @@ useEffect(() => {
 
     console.log("Looping through listOfSongs")
     let parsedListOfSongs = listOfSongs.current as unknown as Array<Array<String>>
-    if( parsedListOfSongs[0] != null){
-      console.log(parsedListOfSongs)
-      return parsedListOfSongs;
+    if(isEnabled){
+      if(parsedListOfSongs[0] != null){
+        console.log(parsedListOfSongs)
+        return parsedListOfSongs;
+      }
+      else{
+        console.log("No songs nearby")
+        return [["NO SONGS NEARBY","","","::"]];
+      }
     }
     else{
-      console.log("No songs nearby")
-      return [["NO SONGS NEARBY","","","::"]];
+      return [["PRIVATE MODE ON, TURN ON TO DISPLAY","","","::"]];
     }
   }
 
@@ -113,12 +118,17 @@ useEffect(() => {
             speed = location.coords.speed
 
             listOfSongs.current = await getListOfUsersSongs(longitude, latitude, altitude, speed)
+            console.log(listOfSongs)
 
             
-          })();}
-      }, 10000);
+          }
+          )();
+        }
+      }, 5000);
       return () => clearInterval(interval);
   }, [isEnabled]);
+
+  
 
   async function getCurrentSong(access_token: any) {
     try{
@@ -149,12 +159,38 @@ useEffect(() => {
     }
   }
 
-  function goToSpotifySong(songURI: String){
-    console.log()
+  // function goToSpotifySong(songURI: String){
+  //   console.log()
 
-    // Linking.openURL('https://open.spotify.com/track/5CZ40GBx1sQ9agT82CLQCT')}>
-    // goToSpotifySong(listitem[3])}>
-  }
+  //   // Linking.openURL('https://open.spotify.com/track/5CZ40GBx1sQ9agT82CLQCT')}>
+  //   // goToSpotifySong(listitem[3])}>
+  // }
+
+  const [Refresh, setRefresh] = useState(false); 
+  const changeRefresh = (value: boolean | ((prevState: boolean) => boolean)) => {
+    setRefresh(value);
+  };
+
+  useEffect(() => {
+    console.log("refresh UseEffect");
+    (async () => {
+      console.log("INSIDE REFRESH")
+      listOfSongs.current = await getListOfUsersSongs(longitude, latitude, altitude, speed)
+
+    })();
+  }, [Refresh]);
+
+const [, updateState] = useState(useRef({}));
+
+
+const [refreshing, setRefreshing] = React.useState(false);
+
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    wait(1000).then(() => setRefreshing(false));
+  }, []);
+
+ 
 type row = "row"
   return (
     
@@ -165,8 +201,14 @@ type row = "row"
         
       </Appbar.Header>
       </View>
-      <View style={{flex: 1}}>
-          {/* setInterval(() =>  */}
+      <ScrollView
+        contentContainerStyle={styles.scrollView}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+          />
+        }>
           {displaySong().map(listitem => (
             <View>
               {/* <Button onPress={() => {Linking.openURL('https://open.spotify.com/track/5CZ40GBx1sQ9agT82CLQCT')}}></Button> + listitem[3].split(":")[2]*/}
@@ -183,8 +225,8 @@ type row = "row"
             </View>
             
           ))}
-          {/* , 10000); */}
-
+          </ScrollView>
+          
         <View style={{position: 'absolute', left: 0, right: 0, bottom: 0}}>
         
           <Banner style={{flex:1,justifyContent:'flex-end',alignItems:'center'}} visible={visible}
@@ -204,7 +246,6 @@ type row = "row"
      
           </View>
         </View>
-      </View>
   </SafeAreaView>
       
   );
@@ -217,8 +258,11 @@ const styles = StyleSheet.create({
       alignItems: 'center',
       justifyContent: 'flex-end',
     },
+    scrollView: {
+      flex: 1,
+      backgroundColor: 'white'
+    },
   });
   
 
   export default GeoLocation;
-
