@@ -3,10 +3,8 @@ import { collection, getFirestore, setDoc, getDoc, doc , updateDoc, DocumentSnap
 import "firebase/firestore";
 import {Alert} from "react-native";
 import { firebaseConfig, userId } from "../config/keys";
-import { CollectionReference, getDocsFromCache, onSnapshot, QueryConstraint, where } from "firebase/firestore";
+import { CollectionReference, deleteDoc, getDocsFromCache, onSnapshot, QueryConstraint, where } from "firebase/firestore";
 import { useRef } from "react";
-
-// import {listOfSongs} from "../config/global";
 
 const app = firebase.initializeApp(firebaseConfig);
 
@@ -41,7 +39,7 @@ export async function createUser(userID: any, token: any) {
       
       const db = getFirestore();
   
-      await setDoc(doc(db, "user", userID),
+      await updateDoc(doc(db, "user", userID),
       {
           location: {
               alt: 0, 
@@ -83,13 +81,13 @@ export async function getListOfUsersSongs(longitude: any, latitude: any, altitud
   currUserAlt = altitude,
   currUserSpeed = speed 
   var listOfSongs: any[][] = [];
-  console.log("Inside getListOfUsersSongs")
+  
   try {
     const db = getFirestore();
 
     
     const userRef = collection(db, "user")
-    //var listOfSongs: any[][] = [];
+    
     const q = query(userRef, limit(4))
 
     const querySnapshot = await getDocs(q);
@@ -99,7 +97,7 @@ export async function getListOfUsersSongs(longitude: any, latitude: any, altitud
               if (doc.data().location.lat >= (currUserLat - proxL) && doc.data().location.lat <= (currUserLat+ proxL) ){
                 if (doc.data().location.long >= (currUserLong - proxL) && doc.data().location.long <= (currUserLong+ proxL) ){
                   if ( doc.data().speed >= (currUserSpeed - proxS) && doc.data().speed <= (currUserSpeed + proxS)){
-                      // console.log(doc.data().songInfo.URI)
+                      
                       localList.push(doc.data().songInfo.songTitle)
                       localList.push(doc.data().songInfo.songArtist)
                       localList.push(doc.data().songInfo.songAlbum)
@@ -112,44 +110,12 @@ export async function getListOfUsersSongs(longitude: any, latitude: any, altitud
               }
         }
     })
-
-    // var count = 0;
-    // const usersData = await onSnapshot(q, (querySnapshot) => {
-    //   querySnapshot.forEach((doc) => {
-    //     var localList = []
-    //     if(doc.data().location.alt >= (currUserAlt - proxA) && doc.data().location.alt <= (currUserAlt+ proxA)){
-    //           if (doc.data().location.lat >= (currUserLat - proxL) && doc.data().location.lat <= (currUserLat+ proxL) ){
-    //             if (doc.data().location.long >= (currUserLong - proxL) && doc.data().location.long <= (currUserLong+ proxL) ){
-    //               if ( doc.data().speed >= (currUserSpeed - proxS) && doc.data().speed <= (currUserSpeed + proxS)){
-    //                   // console.log(doc.data().songInfo.URI)
-    //                   localList.push(doc.data().songInfo.songTitle)
-    //                   localList.push(doc.data().songInfo.songArtist)
-    //                   localList.push(doc.data().songInfo.songAlbum)
-    //                   localList.push(doc.data().songInfo.URI)
-    //                   listOfSongs.push(localList)
-
-                    
-    //               }
-    //             }
-    //           }
-    //         }
-    //       });
-    //   // var something = usersData();
-    //   // console.log("printing something:", something);
-      
-    //   // console.log("Current users: ", listOfSongs.join(","));
-    //   return (listOfSongs.join(","));
-    
-
-    // });
-    //var verifytests = await usersData();
-    //console.log("PRINT USERDATA:", await verifytests);
     
   }catch (err) {
       Alert.alert("There is something wrong in getListOfUsersSongs!!!!");
     }
-    return (listOfSongs.join(","));
-    // console.log(listOfSongs.join(","));
+    
+    return (listOfSongs);
 }
 
 export async function currentPosition(userID: any, longitude: any, latitude: any, altitude: any, speed: any) {
@@ -167,7 +133,7 @@ export async function currentPosition(userID: any, longitude: any, latitude: any
         speed: speed,
       });
   } catch (err) {
-    Alert.alert("There is something wrong!!!!");
+    Alert.alert("There is something wrong in currentPosition!!!!");
   }
 }
 
@@ -209,4 +175,12 @@ export async function getSpotifyToken(userID: any){
       }
 }
 
-
+//DELETE USER WHEN DELETE ACC
+export async function deleteRecord(userID: any){
+  try {
+    const db = getFirestore();
+    const token = (await deleteDoc(doc(db, "user", userID)))
+  } catch (err) {
+    Alert.alert("There is something wrong!!!!");
+  }
+} 
