@@ -10,21 +10,17 @@ import { List, Divider } from 'react-native-paper';
 import { initializeApp } from "firebase/app";
 import { firebaseConfig, userId } from "../config/keys";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import jsonConfig from "../functions/service-account.json";
+
 import { color } from 'react-native-reanimated';
 import { backgroundColor } from '@shopify/restyle';
 
-import { currentPosition, currentSongUpdate, getListOfUsersSongs, getSpotifyToken } from './FirebaseMethods';
+import { currentPosition, currentSongUpdate, getListOfUsersSongs, getSpotifyToken, updateUserInPrivateMode } from './FirebaseMethods';
 import { EllipsizeProp } from 'react-native-paper/lib/typescript/types';
-
-// import {listOfSongs} from "../config/global";
 
 
 const {width: wWidth, height: wHeight} = Dimensions.get("window");
 
 var latitude: any, longitude: any, altitude: any, speed: any;
-
-// var songList: any;
 
 const wait = (timeout: number | undefined) => {
   return new Promise(resolve => setTimeout(resolve, timeout));
@@ -37,15 +33,6 @@ const [isEnabled, setVisuals] = useState(false);
 const [visible, setVisible] = useState(true);
 let listOfSongs = useRef({});
 
-
-const storeFireBaseConfigs = async() => {
-  try{
-    await AsyncStorage.setItem('@firebaseConfig', JSON.stringify(jsonConfig));
-  }
-  catch(e){
-    console.log("Error: ", e);
-  }
-}
 
 const fireBaseSetUp = initializeApp(firebaseConfig);
 
@@ -66,15 +53,16 @@ useEffect(() => {
                 }
             let location = await Location.getCurrentPositionAsync({});
             
-            currentPosition("dfxghh", location.coords.longitude, 
+            currentPosition("60609522", location.coords.longitude, 
               location.coords.latitude, 
               location.coords.altitude, 
               location.coords.speed);
 
-            getCurrentSong(await getSpotifyToken("dfxghh"));
-            // displaySong();
+            getCurrentSong(await getSpotifyToken("60609522"));
 
           })();}
+          else 
+            updateUserInPrivateMode("60609522")
       }, 10000);
       return () => clearInterval(interval);
   }, [isEnabled]);
@@ -94,12 +82,12 @@ useEffect(() => {
       }
     }
     else{
-      return [["PRIVATE MODE ON, TURN ON TO DISPLAY","","","::"]];
+      return [["PRIVATE MODE ON, TURN OFF TO DISPLAY","","","::"]];
     }
   }
 
   useEffect(() => {
-    console.log("Second useEffect");
+    
     const interval = setInterval(() => {
         if(isEnabled){
           
@@ -124,6 +112,8 @@ useEffect(() => {
           }
           )();
         }
+        else 
+          updateUserInPrivateMode("60609522")
       }, 5000);
       return () => clearInterval(interval);
   }, [isEnabled]);
@@ -140,11 +130,11 @@ useEffect(() => {
           'Authorization': `Bearer ${access_token}`
         }
       }).then((response) => {
-        console.log(access_token)
+        
         if(JSON.stringify(response.status) == '200'){
           console.log(response.json().then(
             (data) => { 
-              currentSongUpdate("dfxghh", data.item.uri, data.item.album.name, data.item.artists[0].name, data.item.name);
+              currentSongUpdate("60609522", data.item.uri, data.item.album.name, data.item.artists[0].name, data.item.name);
             }
           ));
         }
@@ -158,13 +148,6 @@ useEffect(() => {
       console.log("Error: ", e);
     }
   }
-
-  // function goToSpotifySong(songURI: String){
-  //   console.log()
-
-  //   // Linking.openURL('https://open.spotify.com/track/5CZ40GBx1sQ9agT82CLQCT')}>
-  //   // goToSpotifySong(listitem[3])}>
-  // }
 
   const [Refresh, setRefresh] = useState(false); 
   const changeRefresh = (value: boolean | ((prevState: boolean) => boolean)) => {
@@ -197,7 +180,7 @@ type row = "row"
     <SafeAreaView style={{ flex: 1 }}>
       <View>
       <Appbar.Header style={{backgroundColor: '#1DB954'}}>
-        <Appbar.Content title='Songs Playing Near You' />
+        <Appbar.Content title='Songs Playing Near You' subtitle="Pull down to refresh"/>
         
       </Appbar.Header>
       </View>
@@ -210,18 +193,18 @@ type row = "row"
           />
         }>
           {displaySong().map(listitem => (
-            <View>
-              {/* <Button onPress={() => {Linking.openURL('https://open.spotify.com/track/5CZ40GBx1sQ9agT82CLQCT')}}></Button> + listitem[3].split(":")[2]*/}
-              <TouchableOpacity onPress={() => Linking.openURL('https://open.spotify.com/track/'+listitem[3].split(":")[2])}>
-                <View style={{flexDirection: 'row' as row , backgroundColor:'#95de62', width:wWidth*0.1, height:wHeight*0.05, padding:5, alignItems: "center", justifyContent: "center"}}>
-                  {/* <Text>Go to Song</Text> */}
-                </View>
-              </TouchableOpacity>
-              <List.Item 
-                title={listitem[0]}
-                description={listitem[3].split(":")[2]}
-              /> 
-              <Divider />
+            <View style={{flexDirection:"row", alignItems: 'center', justifyContent: 'center', width:'100%'}}>
+      
+              <Button mode="outlined" style={{flexWrap:'wrap', alignItems: 'center', width:'100%', justifyContent: 'center', backgroundColor: '#fafafa', borderRadius: 10, marginVertical:10}} 
+                  onPress={() => Linking.openURL('https://open.spotify.com/track/'+listitem[3].split(":")[2])}
+                  contentStyle={{height:44}}
+                  
+              >
+                  
+                {listitem[0]} | {listitem[1]}
+              
+              </Button>
+            
             </View>
             
           ))}
