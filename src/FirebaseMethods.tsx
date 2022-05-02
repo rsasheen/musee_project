@@ -30,7 +30,7 @@ export async function createUser(userID: any, token: any) {
           spotifyToken: token
         });
     } catch (err) {
-      Alert.alert("There is something wrong with createUser!!!!");
+      Alert.alert("Error in createUser!!!!");
     }
   }
 
@@ -55,7 +55,7 @@ export async function createUser(userID: any, token: any) {
           }
         });
     } catch (err) {
-      Alert.alert("There is something wrong with updateUserInPrivateMode!!!!");
+      Alert.alert("Error in updateUserInPrivateMode!!!!");
     }
   }
 
@@ -152,7 +152,7 @@ export async function currentSongUpdate(userID: any, URI: any, album: any, artis
           }
         });
     } catch (err) {
-      Alert.alert("There is something wrong!!!!");
+      Alert.alert("Error in currentSongUpdate!!!!");
     }
   }
 
@@ -161,7 +161,7 @@ export async function setSpotifyToken(userID: any, token: any) {
       const db = getFirestore();
       await updateDoc(doc(db, "user", userID),{ spotifyToken: token });
     } catch (err) {
-      Alert.alert("There is something wrong!!!!");
+      Alert.alert("Error in setSpotifyToken!!!!");
     }
   }
 
@@ -171,7 +171,7 @@ export async function getSpotifyToken(userID: any){
         const token = (await getDoc(doc(db, "user", userID))).get("spotifyToken");
         return token;
       } catch (err) {
-        Alert.alert("There is something wrong!!!!");
+        Alert.alert("Error in getSpotifyToken!!!!");
       }
 }
 
@@ -181,6 +181,8 @@ export async function deleteRecord(userID: any){
     const db = getFirestore();
     const token = (await deleteDoc(doc(db, "user", userID)))
   } catch (err) {
-    Alert.alert("There is something wrong!!!!");
+    Alert.alert("Error in deleteRecord!!!!");
   }
 } 
+
+
