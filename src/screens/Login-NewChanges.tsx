@@ -7,14 +7,14 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { createUser, setSpotifyToken, userIDExists } from "./../FirebaseMethods";
 import { setUpUserID, userId } from "../../config/keys";
-import uID from "../../config/userID.json";
 
 WebBrowser.maybeCompleteAuthSession();
 
 var authenticatedUser = false;
+// var fs = require('fs');
 
 const {width: wWidth, height: wHeight} = Dimensions.get("window");
-export default function Login() {
+export default function Login(_navigation: any) {
   const discovery = {
     authorizationEndpoint: "https://accounts.spotify.com/authorize",
     tokenEndpoint: "https://accounts.spotify.com/api/token",
@@ -22,31 +22,34 @@ export default function Login() {
   
   const [request, response, promptAsync] = useAuthRequest({
     responseType: ResponseType.Token,
-    clientId: "<>",
-    clientSecret: "<>",
+    clientId: "e8f0a249dd494957b24bf576939e6b00",
+    clientSecret: "033965432dfd4a63a950a30e1b986b30",
     scopes: ["user-read-currently-playing"],
     usePKCE: false,
-    redirectUri: "<>"
+    redirectUri: "exp://172.26.247.162:19000"
   }, discovery);
 
   useEffect(() => {
     if(response?.type === "success"){
       authenticatedUser = true;
       const {access_token} = response.params;
-      
-      if(userId != null){
+      console.log(access_token)
+      callApi(access_token);
+      if(!false){
         var min = Math.ceil(0);
 	      var max = Math.floor(100000000);
         var id = Math.floor(Math.random() * (max - min + 1)) + min; 
         console.log("USER ID IS NULL: " + JSON.stringify(id));
         createUser(JSON.stringify(id), access_token);
-        setUpUserID(JSON.stringify(id))
+        
       }
       else{
-       checkExistsUser() 
-       checkIfUserJsonSet()
+        async() => {
+          var checkUser = await checkExistsUser() 
+        }
+
       }
-      // callApi(access_token);
+      
     }
     else{
       console.log('Failed to setup with login. Trying Again');
@@ -55,33 +58,14 @@ export default function Login() {
 
 
   async function checkExistsUser(){
-    // console.log("Inside Login.tsx else block: ") 
     try{
-      // console.log(await userIDExists("15746922")); // User exists
+       // User exists
       console.log(await userIDExists("123456"));  // User does not exists
     }catch(e){
       console.log("Error: ", e);
     }
-    // console.log("After the async call for userID")
   }
 
-  async function checkIfUserJsonSet(){
-    if(Object.keys(uID).length === 0)
-      console.log("User json is empty");
-    else
-      console.log("User json is has: " + Object.keys(uID));
-  }
-
-
-
-  const storeToken = async(accessToken: string) => {
-    try{
-      await AsyncStorage.setItem('@access_token', accessToken);
-    }
-    catch(e){
-      console.log("Error: ", e);
-    }
-  }
 
   const callApi = async(access_token: string) => {
     try{
@@ -93,16 +77,22 @@ export default function Login() {
           'Authorization': `Bearer ${access_token}`
         }
       }).then((response) => {
-        console.log(response.json().then(
-            (data) => { console.log(
-              "\n\n",
-              "\nSong Name: ", data.item.name, 
-              "\nAlbum Name: ", data.item.album.name, 
-              "\nMain Artist Name: ", data.item.artists[0].name, 
-              "\nTrack URI: ", data.item.uri, 
-              "\n\n") 
+        if(JSON.stringify(response.status) == '200'){
+          console.log(response.json().then(
+            (data) => { 
+                console.log(
+                  "\n\n",
+                  "\nSong Name: ", data.item.name, 
+                  "\nAlbum Name: ", data.item.album.name, 
+                  "\nMain Artist Name: ", data.item.artists[0].name, 
+                  "\nTrack URI: ", data.item.uri, 
+                  "\n\n")
             }
         ));
+        }
+        else{
+          console.log("There is no song playing");
+        }
     });
     }
     catch(e){
@@ -110,7 +100,6 @@ export default function Login() {
     }
   }
 
-  var token = AsyncStorage.getItem("@access_token");
   return (
     <View style={{flex:1,justifyContent:'center',alignItems:'center'}}>
       <TouchableOpacity onPress={() => promptAsync()}>
